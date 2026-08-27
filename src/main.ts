@@ -126,21 +126,52 @@ def main():
         elif position_index == 3:
             x_offset, y_offset = 36 + 270, 36 + 360
             
-        pegs_set = set(tuple(p) for p in board)
         radius = 2.0
         
+        # 1. Draw grid lines instead of all empty circles
         for c in range(1, 31):
-            for r in range(1, 41):
-                if (c % 2) != (r % 2):
-                    cx = x_offset + (c - 1) * 9.0
-                    cy = y_offset + (r - 1) * 9.0
-                    obj = scribus.createEllipse(cx - radius, cy - radius, radius * 2, radius * 2)
-                    if (c, r) in pegs_set:
-                        scribus.setFillColor("Black", obj)
-                    else:
-                        scribus.setFillColor("None", obj)
-                    scribus.setLineColor("Black", obj)
-                    scribus.setLineWidth(0.5, obj)
+            x = x_offset + (c - 1) * 9.0
+            line = scribus.createLine(x, y_offset, x, y_offset + 39 * 9.0)
+            scribus.setLineColor("Black", line)
+            scribus.setLineWidth(0.1, line)
+            
+        for r in range(1, 41):
+            y = y_offset + (r - 1) * 9.0
+            line = scribus.createLine(x_offset, y, x_offset + 29 * 9.0, y)
+            scribus.setLineColor("Black", line)
+            scribus.setLineWidth(0.1, line)
+            
+        # 2. Draw 4 corner circles (hollow)
+        corners = [(1, 2), (30, 1), (1, 40), (30, 39)]
+        for (c, r) in corners:
+            cx = x_offset + (c - 1) * 9.0
+            cy = y_offset + (r - 1) * 9.0
+            obj = scribus.createEllipse(cx - radius, cy - radius, radius * 2, radius * 2)
+            scribus.setFillColor("None", obj)
+            scribus.setLineColor("Black", obj)
+            scribus.setLineWidth(0.5, obj)
+            
+        # 3. Draw plot points (filled)
+        pegs_set = set(tuple(p) for p in board)
+        for (c, r) in pegs_set:
+            cx = x_offset + (c - 1) * 9.0
+            cy = y_offset + (r - 1) * 9.0
+            obj = scribus.createEllipse(cx - radius, cy - radius, radius * 2, radius * 2)
+            scribus.setFillColor("Black", obj)
+            scribus.setLineColor("Black", obj)
+            scribus.setLineWidth(0.5, obj)
+            
+        # 4. Draw connecting lines between the appropriate places
+        if len(board) > 1:
+            path_coords = []
+            for (c, r) in board:
+                cx = x_offset + (c - 1) * 9.0
+                cy = y_offset + (r - 1) * 9.0
+                path_coords.extend([cx, cy])
+            polyline = scribus.createPolyLine(path_coords)
+            scribus.setLineColor("Black", polyline)
+            scribus.setLineWidth(1.0, polyline)
+            scribus.setFillColor("None", polyline)
     
     scribus.setRedraw(True)
     scribus.redrawAll()
