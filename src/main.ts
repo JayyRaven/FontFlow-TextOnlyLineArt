@@ -100,52 +100,53 @@ import scribus
 def main():
     if not scribus.haveDoc():
         try:
-            scribus.newDocument(scribus.PAPER_LETTER, (36, 36, 36, 36), scribus.PORTRAIT, 1, scribus.UNIT_POINTS, scribus.PAGE_1, 0, 1)
+            # Create a Landscape Letter document
+            scribus.newDocument(scribus.PAPER_LETTER, (36, 36, 36, 36), scribus.LANDSCAPE, 1, scribus.UNIT_POINTS, scribus.PAGE_1, 0, 1)
         except Exception:
             pass # Fallback if specific constants change in API
+            
+    # Ensure we are using points for our calculations
+    scribus.setUnit(scribus.UNIT_POINTS)
 
     # Array of boards, each board is a list of [col, row] pegs
     boards = ${JSON.stringify(boardsData)}
 
     scribus.setRedraw(False)
 
+    spacing = 12.0
+    radius = 2.5
+
     for i, board in enumerate(boards):
-        page_index = i // 4
-        position_index = i % 4
+        page_index = i // 2
+        position_index = i % 2
         
         if position_index == 0 and page_index > 0:
             scribus.newPage(-1)
             scribus.gotoPage(page_index + 1)
             
         if position_index == 0:
-            x_offset, y_offset = 36, 36
+            x_offset, y_offset = 24, 72
         elif position_index == 1:
-            x_offset, y_offset = 36 + 270, 36
-        elif position_index == 2:
-            x_offset, y_offset = 36, 36 + 360
-        elif position_index == 3:
-            x_offset, y_offset = 36 + 270, 36 + 360
+            x_offset, y_offset = 420, 72
             
-        radius = 2.0
-        
         # 1. Draw grid lines instead of all empty circles
         for c in range(1, 31):
-            x = x_offset + (c - 1) * 9.0
-            line = scribus.createLine(x, y_offset, x, y_offset + 39 * 9.0)
+            x = x_offset + (c - 1) * spacing
+            line = scribus.createLine(x, y_offset, x, y_offset + 39 * spacing)
             scribus.setLineColor("Black", line)
             scribus.setLineWidth(0.1, line)
             
         for r in range(1, 41):
-            y = y_offset + (r - 1) * 9.0
-            line = scribus.createLine(x_offset, y, x_offset + 29 * 9.0, y)
+            y = y_offset + (r - 1) * spacing
+            line = scribus.createLine(x_offset, y, x_offset + 29 * spacing, y)
             scribus.setLineColor("Black", line)
             scribus.setLineWidth(0.1, line)
             
         # 2. Draw 4 corner circles (hollow)
         corners = [(1, 2), (30, 1), (1, 40), (30, 39)]
         for (c, r) in corners:
-            cx = x_offset + (c - 1) * 9.0
-            cy = y_offset + (r - 1) * 9.0
+            cx = x_offset + (c - 1) * spacing
+            cy = y_offset + (r - 1) * spacing
             obj = scribus.createEllipse(cx - radius, cy - radius, radius * 2, radius * 2)
             scribus.setFillColor("None", obj)
             scribus.setLineColor("Black", obj)
@@ -154,8 +155,8 @@ def main():
         # 3. Draw plot points (filled)
         pegs_set = set(tuple(p) for p in board)
         for (c, r) in pegs_set:
-            cx = x_offset + (c - 1) * 9.0
-            cy = y_offset + (r - 1) * 9.0
+            cx = x_offset + (c - 1) * spacing
+            cy = y_offset + (r - 1) * spacing
             obj = scribus.createEllipse(cx - radius, cy - radius, radius * 2, radius * 2)
             scribus.setFillColor("Black", obj)
             scribus.setLineColor("Black", obj)
@@ -165,8 +166,8 @@ def main():
         if len(board) > 1:
             path_coords = []
             for (c, r) in board:
-                cx = x_offset + (c - 1) * 9.0
-                cy = y_offset + (r - 1) * 9.0
+                cx = x_offset + (c - 1) * spacing
+                cy = y_offset + (r - 1) * spacing
                 path_coords.extend([cx, cy])
             polyline = scribus.createPolyLine(path_coords)
             scribus.setLineColor("Black", polyline)
